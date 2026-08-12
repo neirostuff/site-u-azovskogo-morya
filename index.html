@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гостевой дом "У Азовского моря" | Аренда в Ейске</title>
+    <meta name="description" content="Комфортное жилье в Ейске. Гостевой дом 'У Азовского моря' после свежего ремонта. Номера Комфорт, Полулюкс и Люкс.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <style>
+        :root {
+            /* Light Theme (Beige/Sand + Blue/Green) */
+            --bg-color: #faf8f5;
+            --text-main: #2d3748;
+            --text-muted: #4a5568;
+            --primary: #3b82f6; /* Soft blue */
+            --primary-hover: #2563eb;
+            --secondary: #10b981; /* Nature green */
+            --secondary-hover: #059669;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(255, 255, 255, 0.5);
+            --header-bg: rgba(250, 248, 245, 0.85);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #60a5fa;
+            --primary-hover: #93c5fd;
+            --secondary: #34d399;
+            --secondary-hover: #6ee7b7;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --header-bg: rgba(15, 23, 42, 0.85);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            --modal-overlay: rgba(0, 0, 0, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden !important;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Onest', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        img, svg, video, iframe {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        /* Utility */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-main);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1000;
+            padding: 15px 0;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .nav-links a {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .phone-link {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .phone-link:hover {
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            background-color: var(--primary);
+            color: #fff;
+            border-radius: 50px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+        .btn-secondary:hover {
+            background-color: var(--secondary-hover);
+        }
+
+        /* Theme Toggle & Wink */
+        .theme-toggle {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-main); font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            padding: 5px; border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        .theme-toggle:hover { transform: rotate(15deg); }
+
+        @keyframes themeToggleWink {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            10% { transform: scale(1.2) rotate(-10deg); filter: brightness(1.3); }
+            20% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            30% { transform: scale(1.2) rotate(10deg); filter: brightness(1.3); }
+            40% { transform: scale(1); filter: brightness(1); }
+        }
+        .theme-toggle.wink { animation: themeToggleWink 2s ease infinite; }
+        [data-theme="dark"] .theme-toggle.wink { animation: none; }
+
+        .menu-btn {
+            display: none; background: none; border: none;
+            font-size: 2rem; color: var(--text-main); cursor: pointer;
+        }
+
+        /* Mobile Drawer */
+        .mobile-drawer {
+            position: fixed; top: 0; right: 0;
+            width: 300px; height: 100vh;
+            background: var(--header-bg);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-left: 1px solid var(--card-border);
+            padding: 80px 30px;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999; display: flex; flex-direction: column; gap: 2rem;
+        }
+        .mobile-drawer.active { transform: translateX(0); }
+        .mobile-drawer .nav-links { flex-direction: column; white-space: normal; }
+        .drawer-close {
+            position: absolute; top: 20px; right: 20px;
+            background: none; border: none; font-size: 2.5rem;
+            color: var(--text-main); cursor: pointer;
+        }
+
+        /* Hero Slider */
+        .hero {
+            position: relative;
+            height: 100vh; min-height: 600px;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            color: #fff; text-align: center;
+            z-index: 1; /* Stacking context */
+        }
+        .hero-slider {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+        .hero-slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 1.5s ease-in-out;
+            transform: scale(1.1);
+        }
+        .hero-slide.active { opacity: 1; animation: kenBurns 15s ease-out forwards; }
+        @keyframes kenBurns {
+            0% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .hero-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(45,55,72,0.8));
+            z-index: 1;
+        }
+        .hero-content {
+            position: relative; z-index: 2; max-width: 900px; padding: 0 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+        .hero h1 {
+            font-size: 4rem; margin-bottom: 1.5rem;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .hero p {
+            font-size: 1.6rem; margin-bottom: 2.5rem; opacity: 0.95;
+        }
+
+        /* Sections */
+        section { padding: 100px 0; position: relative; }
+
+        /* Pains */
+        .pains-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;
+        }
+        .pain-card { padding: 2.5rem 2rem; text-align: center; transition: transform 0.3s ease; }
+        .pain-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .pain-icon { font-size: 3.5rem; margin-bottom: 1.5rem; }
+        .pain-card h3 { margin-bottom: 1rem; font-size: 1.4rem; color: var(--primary); }
+
+        /* Services Grid */
+        .services-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem;
+        }
+        .service-card {
+            overflow: hidden; border-radius: 20px; transition: transform 0.3s ease; display: flex; flex-direction: column;
+        }
+        .service-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
+        .service-img-wrapper { width: 100%; height: 260px; overflow: hidden; position: relative; }
+        .service-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .service-card:hover .service-img-wrapper img { transform: scale(1.08); }
+        
+        .badge {
+            position: absolute; top: 15px; right: 15px;
+            background: var(--secondary); color: white;
+            padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;
+        }
+
+        .service-content { padding: 2rem; flex: 1; display: flex; flex-direction: column; }
+        .service-content h3 { margin-bottom: 1rem; font-size: 1.6rem; }
+        .service-content ul { margin-bottom: 1.5rem; padding-left: 1.5rem; color: var(--text-muted); flex: 1; }
+        .service-content ul li { margin-bottom: 0.5rem; }
+
+        /* Advantages Banner */
+        .adv-banner {
+            border-radius: 30px; overflow: hidden; display: flex; flex-wrap: wrap; margin-top: 2rem;
+        }
+        .adv-img { flex: 1; min-width: 300px; }
+        .adv-img img { width: 100%; height: 100%; object-fit: cover; }
+        .adv-content {
+            flex: 1; min-width: 300px; padding: 4rem; display: flex; flex-direction: column; justify-content: center;
+        }
+        .adv-content h3 { font-size: 2rem; margin-bottom: 1.5rem; color: var(--primary); }
+        
+        /* FAQ */
+        .faq-item { margin-bottom: 1.5rem; padding: 1.5rem 2rem; cursor: pointer; transition: all 0.3s ease; }
+        .faq-question { font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+        .faq-icon { font-size: 1.5rem; color: var(--primary); transition: transform 0.3s ease; }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, margin-top 0.3s ease; color: var(--text-muted); }
+        .faq-item.open .faq-answer { max-height: 300px; margin-top: 1rem; }
+        .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+        /* Contacts */
+        .contacts-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+        .contact-info { padding: 3rem; }
+        .contact-item { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+        .contact-icon {
+            width: 55px; height: 55px; border-radius: 50%; background: var(--primary); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+        }
+        .contact-text h4 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .contact-text p, .contact-text a { color: var(--text-muted); font-size: 1.1rem; font-weight: 500; }
+        
+        .vk-promo {
+            background: rgba(16, 185, 129, 0.1); border: 1px solid var(--secondary);
+            border-radius: 15px; padding: 1.5rem; margin-top: 2rem; text-align: center;
+        }
+        .vk-promo p { color: var(--secondary); font-weight: 600; margin-bottom: 1rem; }
+        
+        .map-container { border-radius: 20px; overflow: hidden; min-height: 400px; box-shadow: var(--shadow-sm); z-index: 1; }
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* Footer */
+        footer { background: var(--header-bg); padding: 3rem 0; text-align: center; border-top: 1px solid var(--card-border); }
+        .footer-socials { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .social-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #fff;
+            font-size: 1.5rem; transition: all 0.3s ease;
+        }
+        .social-link:hover { transform: translateY(-3px); background: var(--primary-hover); }
+
+        /* Chat */
+        .chat-widget { position: fixed; bottom: 30px; right: 30px; z-index: 1000; }
+        .chat-btn {
+            width: 65px; height: 65px; border-radius: 50%; background: var(--secondary); color: white; border: none;
+            font-size: 2rem; cursor: pointer; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; position: relative;
+        }
+        .chat-btn:before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50%; border: 2px solid var(--secondary); animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+        .chat-btn:hover { transform: scale(1.1); }
+        
+        .chat-box {
+            position: absolute; bottom: 85px; right: 0; width: 360px;
+            background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border); border-radius: 20px; box-shadow: var(--shadow-lg);
+            display: none; flex-direction: column; overflow: hidden;
+            transform-origin: bottom right; animation: chatPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes chatPop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .chat-box.active { display: flex; }
+        .chat-header { background: var(--secondary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-family: 'Unbounded', sans-serif; }
+        .chat-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+        .chat-messages { height: 280px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+        .chat-msg { max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 0.95rem; }
+        .msg-bot { background: var(--bg-color); align-self: flex-start; border-bottom-left-radius: 5px; }
+        .chat-input { padding: 15px; border-top: 1px solid var(--card-border); display: flex; gap: 10px; }
+        .chat-input input { flex: 1; padding: 12px 15px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--bg-color); color: var(--text-main); outline: none; }
+        .chat-input button { background: var(--secondary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--modal-overlay); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: var(--card-bg); border: 1px solid var(--card-border); padding: 2.5rem;
+            border-radius: 24px; width: 100%; max-width: 450px; transform: translateY(30px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; box-shadow: var(--shadow-lg);
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 2rem; color: var(--text-muted); cursor: pointer; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input { width: 100%; padding: 14px 15px; border-radius: 12px; border: 1px solid var(--card-border); background: var(--bg-color); color: var(--text-main); outline: none; font-family: inherit; }
+        .form-group input:focus { border-color: var(--primary); }
+
+        /* Mobile Call */
+        .mobile-call-btn {
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--primary); color: white; text-align: center; padding: 18px;
+            font-size: 1.2rem; font-weight: 700; z-index: 998; box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* Responsive */
+        @media (max-width: 1150px) {
+            .nav-links, .header-actions .phone-link, .header-actions .btn { display: none; }
+            .menu-btn { display: block; }
+        }
+        @media (max-width: 992px) {
+            .contacts-wrapper { grid-template-columns: 1fr; }
+            .adv-banner { flex-direction: column; }
+            .adv-content { padding: 2rem; }
+        }
+        @media (max-width: 576px) {
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { font-size: 1.1rem; }
+            .section-title { font-size: 2rem; }
+            .services-grid, .pains-grid { grid-template-columns: 1fr; }
+            .mobile-call-btn { display: block; }
+            body { padding-bottom: 60px; }
+            .chat-widget { bottom: 80px; right: 15px; }
+            .chat-box { width: calc(100vw - 32px); bottom: 75px; right: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-inner">
+            <a href="#" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                У&nbsp;Азовского моря
+            </a>
+            
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#about">О&nbsp;нас</a></li>
+                    <li><a href="#rooms">Номера</a></li>
+                    <li><a href="#advantages">Преимущества</a></li>
+                    <li><a href="#faq">Вопросы</a></li>
+                    <li><a href="#contacts">Контакты</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="theme-toggle wink" id="themeToggle" aria-label="Переключить тему">🌙</button>
+                <a href="tel:89182777150" class="phone-link">8 (918) 277-71-50</a>
+                <button class="btn" onclick="openModal()">Забронировать</button>
+                <button class="menu-btn" id="menuBtn" aria-label="Меню">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <button class="drawer-close" id="drawerClose" aria-label="Закрыть меню">×</button>
+        <ul class="nav-links" style="display:flex;">
+            <li><a href="#about" class="drawer-link">О&nbsp;нас</a></li>
+            <li><a href="#rooms" class="drawer-link">Номера</a></li>
+            <li><a href="#advantages" class="drawer-link">Преимущества</a></li>
+            <li><a href="#faq" class="drawer-link">Вопросы</a></li>
+            <li><a href="#contacts" class="drawer-link">Контакты</a></li>
+        </ul>
+        <a href="tel:89182777150" class="phone-link" style="display:block;">8 (918) 277-71-50</a>
+        <button class="btn" onclick="openModal()" style="display:inline-block; width:100%;">Забронировать</button>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-slider">
+            <div class="hero-slide active" style="background-image: url('images/hero-bg1.jpg');" fetchpriority="high" decoding="async"></div>
+            <div class="hero-slide" style="background-image: url('images/hero-bg2.jpg');" loading="lazy" decoding="async"></div>
+        </div>
+        <div class="hero-overlay"></div>
+        
+        <div class="hero-content">
+            <h1>Добро пожаловать в&nbsp;Гостевой дом «У&nbsp;Азовского моря»</h1>
+            <p>Комфортное жилье в&nbsp;Ейске после свежего ремонта. Идеальное место для отдыха с&nbsp;семьей и&nbsp;друзьями.</p>
+            <div style="display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;">
+                <button class="btn" onclick="openModal()" style="font-size: 1.1rem; padding: 16px 36px;">Звоните сейчас</button>
+                <a href="https://vk.com/club55293303" target="_blank" class="btn btn-secondary" style="font-size: 1.1rem; padding: 16px 36px;">Написать в&nbsp;ВК</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pains -->
+    <section id="about" class="container">
+        <h2 class="section-title fade-in">Устали от&nbsp;долгих поисков?</h2>
+        <div class="pains-grid">
+            <div class="pain-card glass fade-in">
+                <div class="pain-icon">⏳</div>
+                <h3>Долгое ожидание ответа</h3>
+                <p>Трудно связаться с&nbsp;хозяевами для брони? Мы всегда на&nbsp;связи и&nbsp;отвечаем моментально!</p>
+            </div>
+            <div class="pain-card glass fade-in">
+                <div class="pain-icon">🏠</div>
+                <h3>Несоответствие фото</h3>
+                <p>У&nbsp;нас недавно прошел масштабный ремонт. Все фотографии реальны, а&nbsp;внутри вас ждет уют и&nbsp;чистота.</p>
+            </div>
+            <div class="pain-card glass fade-in">
+                <div class="pain-icon">🥵</div>
+                <h3>Жара и&nbsp;дискомфорт</h3>
+                <p>В&nbsp;каждом нашем номере установлена современная сплит-система для вашего идеального климата.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rooms (Services) -->
+    <section id="rooms" class="container">
+        <h2 class="section-title fade-in">Наши номера</h2>
+        <div class="services-grid">
+            <div class="service-card glass fade-in">
+                <div class="service-img-wrapper">
+                    <span class="badge">Популярно</span>
+                    <img src="images/room-comfort.jpg" alt="Комфорт" loading="lazy" decoding="async">
+                </div>
+                <div class="service-content">
+                    <h3>Номер «КОМФОРТ»</h3>
+                    <ul>
+                        <li>Двуспальная кровать и&nbsp;раскладной диван</li>
+                        <li>Сплит-система, телевизор, Wi-Fi</li>
+                        <li>Собственный холодильник</li>
+                        <li>Новый ремонт в&nbsp;пастельных тонах</li>
+                    </ul>
+                    <button class="btn" onclick="openModal()" style="width: 100%;">Забронировать</button>
+                </div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-img-wrapper">
+                    <img src="images/room-semi.jpg" alt="Полулюкс" loading="lazy" decoding="async">
+                </div>
+                <div class="service-content">
+                    <h3>Номер «ПОЛУЛЮКС»</h3>
+                    <ul>
+                        <li>Увеличенная площадь номера</li>
+                        <li>Рабочая зона и&nbsp;зона отдыха</li>
+                        <li>Современный санузел с&nbsp;душевой</li>
+                        <li>Кабельное ТВ и&nbsp;скоростной интернет</li>
+                    </ul>
+                    <button class="btn" onclick="openModal()" style="width: 100%;">Забронировать</button>
+                </div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-img-wrapper">
+                    <span class="badge" style="background:var(--primary);">Премиум</span>
+                    <img src="images/room-lux.jpg" alt="Люкс" loading="lazy" decoding="async">
+                </div>
+                <div class="service-content">
+                    <h3>Номер «ЛЮКС»</h3>
+                    <ul>
+                        <li>Двухкомнатный номер с&nbsp;гостиной</li>
+                        <li>Панорамные окна</li>
+                        <li>Премиальная отделка и&nbsp;мебель</li>
+                        <li>Кухонный уголок и&nbsp;обеденная зона</li>
+                    </ul>
+                    <button class="btn" onclick="openModal()" style="width: 100%;">Забронировать</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advantages -->
+    <section id="advantages" class="container">
+        <h2 class="section-title fade-in">Обновленный гостевой дом</h2>
+        <div class="adv-banner glass fade-in">
+            <div class="adv-img">
+                <img src="images/repair.jpg" alt="Свежий ремонт" loading="lazy" decoding="async">
+            </div>
+            <div class="adv-content">
+                <h3>Вновь открываем двери!</h3>
+                <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 1.5rem;">Мы завершили масштабный ремонт и&nbsp;рады представить вам полностью обновленные номера. Мы продумали каждую деталь для вашего удобства.</p>
+                <ul style="list-style:none; display:flex; flex-direction:column; gap:10px;">
+                    <li>✔️ <b>Новый ремонт</b> и&nbsp;стильный интерьер</li>
+                    <li>✔️ <b>Современная техника</b> в&nbsp;каждом номере</li>
+                    <li>✔️ <b>Расположение</b> рядом с&nbsp;морем</li>
+                    <li>✔️ <b>Уютная территория</b> с&nbsp;зоной барбекю</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="container">
+        <h2 class="section-title fade-in">Частые вопросы</h2>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div class="faq-item glass fade-in" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Как забронировать номер?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Вы можете оставить заявку на&nbsp;сайте, написать нам в&nbsp;ВКонтакте или просто позвонить по&nbsp;телефону 8 (918) 277-71-50. Мы подберем для вас лучший вариант!</p>
+                </div>
+            </div>
+            <div class="faq-item glass fade-in" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Можно ли с&nbsp;домашними животными?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Возможность проживания с&nbsp;питомцами оговаривается индивидуально. Пожалуйста, сообщите нам об&nbsp;этом при бронировании.</p>
+                </div>
+            </div>
+            <div class="faq-item glass fade-in" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Что есть на&nbsp;территории?</span>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <p>На&nbsp;территории гостевого дома есть бесплатный Wi-Fi, зона отдыха с&nbsp;мангалом, общая кухня со&nbsp;всем необходимым оборудованием и&nbsp;парковка для гостей.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacts -->
+    <section id="contacts" class="container">
+        <h2 class="section-title fade-in">Контакты</h2>
+        <div class="contacts-wrapper">
+            <div class="contact-info glass fade-in">
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div class="contact-text">
+                        <h4>Адрес</h4>
+                        <p>г.&nbsp;Ейск, ул. Победы, 8 (уточняется)</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📞</div>
+                    <div class="contact-text">
+                        <h4>Телефон</h4>
+                        <a href="tel:89182777150">8 (918) 277-71-50</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">✉️</div>
+                    <div class="contact-text">
+                        <h4>Email</h4>
+                        <a href="mailto:info@yeisk-otdih.ru">info@yeisk-otdih.ru</a>
+                    </div>
+                </div>
+                
+                <div class="vk-promo">
+                    <p>🎁 Дарим скидку на&nbsp;первый визит!</p>
+                    <a href="https://vk.com/club55293303" target="_blank" class="btn btn-secondary" style="width:100%;">Написать в&nbsp;ВК и&nbsp;забрать скидку</a>
+                </div>
+            </div>
+            <div class="map-container fade-in" id="map"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <h3 style="font-family:'Unbounded', sans-serif; font-size:1.5rem; color:var(--primary); margin-bottom:1rem;">У Азовского моря</h3>
+            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ваш комфортный отдых в&nbsp;Ейске. 2026 &copy; Все права защищены.</p>
+            <div class="footer-socials">
+                <a href="https://vk.com/club55293303" target="_blank" class="social-link" aria-label="ВКонтакте">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.07 2.628c3.084 0 5.093 2.023 5.093 5.143v8.458c0 3.12-2.01 5.143-5.093 5.143H8.93C5.846 21.372 3.837 19.35 3.837 16.23V7.77c0-3.12 2.01-5.143 5.093-5.143h6.14zm-4.735 12.01c-3.197 0-5.034-2.2-5.088-5.88h1.61c.041 2.607 1.258 3.738 2.215 3.974V8.748h1.536v2.268c.944-.105 1.956-1.182 2.285-2.268h1.523c-.237 1.341-1.22 2.37-1.928 2.801.708.316 1.833 1.196 2.243 2.723h-1.637c-.328-1.025-1.18-1.802-2.428-1.894v1.93c-2.4-.08-2.33-.27-2.33-.27z"/></svg>
+                </a>
+            </div>
+            <div style="display:flex; justify-content:center; gap:20px; font-size:0.9rem;">
+                <a href="http://yeisk-otdih.ru" target="_blank" style="color:var(--text-muted); text-decoration:underline;">Старый сайт</a>
+                <a href="#" style="color:var(--text-muted); text-decoration:underline;">Политика конфиденциальности</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <button class="chat-btn" id="chatBtn" aria-label="Открыть чат">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+        <div class="chat-box" id="chatBox">
+            <div class="chat-header">
+                <span>Администратор</span>
+                <button class="chat-close" id="chatClose" aria-label="Закрыть чат">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-msg msg-bot">
+                    Здравствуйте! 👋 Готовы ответить на&nbsp;ваши вопросы о&nbsp;размещении.
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Введите сообщение...">
+                <button id="chatSend" aria-label="Отправить">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()" aria-label="Закрыть">×</button>
+            <h3 style="margin-bottom:1.5rem; font-family:'Unbounded'; font-size:1.5rem; color:var(--primary);">Забронировать номер</h3>
+            <form onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label>Ваше имя</label>
+                    <input type="text" required placeholder="Иван">
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="tel" required placeholder="+7 (999) 000-00-00">
+                </div>
+                <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mobile Call Button -->
+    <a href="tel:89182777150" class="mobile-call-btn">
+        📞 Позвонить сейчас
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Theme logic
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeToggle');
+        
+        themeBtn.addEventListener('click', () => {
+            themeBtn.classList.remove('wink');
+            let current = html.getAttribute('data-theme');
+            let next = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon(next);
+        });
+
+        function updateThemeIcon(theme) {
+            themeBtn.innerHTML = theme === 'light' ? '🌙' : '☀️';
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            html.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            if(savedTheme === 'dark') themeBtn.classList.remove('wink');
+        }
+
+        // Mobile Drawer Menu
+        const menuBtn = document.getElementById('menuBtn');
+        const drawerClose = document.getElementById('drawerClose');
+        const mobileDrawer = document.getElementById('mobileDrawer');
+        const drawerLinks = document.querySelectorAll('.drawer-link');
+
+        menuBtn.addEventListener('click', () => mobileDrawer.classList.add('active'));
+        drawerClose.addEventListener('click', () => mobileDrawer.classList.remove('active'));
+        drawerLinks.forEach(link => link.addEventListener('click', () => mobileDrawer.classList.remove('active')));
+
+        // Slider Ken Burns
+        const slides = document.querySelectorAll('.hero-slide');
+        let currentSlide = 0;
+        if(slides.length > 1) {
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 8000);
+        }
+
+        // FAQ Toggle
+        function toggleFaq(el) {
+            el.classList.toggle('open');
+        }
+
+        // Intersection Observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // Leaflet Map (Yeisk)
+        const map = L.map('map').setView([46.7118, 38.2750], 14); // Coord for Yeisk
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([46.7118, 38.2750]).addTo(map)
+            .bindPopup('<b>У Азовского моря</b><br>Гостевой дом')
+            .openPopup();
+
+        // Chat Widget
+        const chatBtn = document.getElementById('chatBtn');
+        const chatBox = document.getElementById('chatBox');
+        const chatClose = document.getElementById('chatClose');
+        const chatSend = document.getElementById('chatSend');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatBtn.addEventListener('click', () => { chatBox.classList.add('active'); chatBtn.style.display = 'none'; });
+        chatClose.addEventListener('click', () => { chatBox.classList.remove('active'); chatBtn.style.display = 'flex'; });
+
+        chatSend.addEventListener('click', handleChatSubmit);
+        chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleChatSubmit(); });
+
+        function handleChatSubmit() {
+            const val = chatInput.value.trim();
+            if(!val) return;
+            const uMsg = document.createElement('div');
+            uMsg.className = 'chat-msg';
+            uMsg.style.background = 'var(--secondary)';
+            uMsg.style.color = 'white';
+            uMsg.style.alignSelf = 'flex-end';
+            uMsg.style.borderBottomRightRadius = '5px';
+            uMsg.innerText = val;
+            chatMessages.appendChild(uMsg);
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            setTimeout(() => {
+                const bMsg = document.createElement('div');
+                bMsg.className = 'chat-msg msg-bot';
+                bMsg.innerHTML = 'Минутку, сейчас проверим свободные номера... Оставьте телефон для связи!';
+                chatMessages.appendChild(bMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000);
+        }
+
+        // Modal Form
+        const modalOverlay = document.getElementById('modalOverlay');
+        function openModal() { modalOverlay.classList.add('active'); }
+        function closeModal() { modalOverlay.classList.remove('active'); }
+        function submitForm(e) {
+            e.preventDefault();
+            alert('Заявка успешно отправлена! Мы скоро свяжемся с вами.');
+            closeModal();
+            e.target.reset();
+        }
+    </script>
+</body>
+</html>
